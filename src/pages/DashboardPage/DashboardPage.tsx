@@ -2,10 +2,12 @@ import { DashboardGrid } from './components/DashboardGrid'
 import { Button } from '../../components/ui/button'
 import { Bot, MoonStar, Sun } from 'lucide-react'
 import { useThemeMode } from '../../hooks/useThemeMode'
+import { useRobotSSE } from '../../hooks/useRobotSSE'
 import { Footer } from '../../components/Footer'
 
 export function DashboardPage() {
   const theme = useThemeMode()
+  const robot = useRobotSSE()
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -41,7 +43,7 @@ export function DashboardPage() {
       </main>
 
       {/* Footer */}
-      <Footer themeLabel={theme.mode === 'dark' ? 'Escuro' : 'Claro'} />
+      <Footer themeLabel={theme.mode === 'dark' ? 'Escuro' : 'Claro'} connected={robot.connected} />
     </div>
   )
 }
