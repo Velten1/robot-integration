@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react'
 
 const API_URL = 'http://localhost:3001/events'
 
+export type RobotSSEData = {
+  status_robo?: string
+  total_pecas?: number
+  total_ciclos?: number
+  taxa_acerto?: string
+  ultimo_log?: string
+}
+
 export function useRobotSSE() {
-  const [data, setData] = useState<Record<string, unknown> | null>(null)
+  const [data, setData] = useState<RobotSSEData | null>(null)
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
@@ -15,9 +23,13 @@ export function useRobotSSE() {
     }
 
     source.onmessage = (e) => {
-      const parsed = JSON.parse(e.data)
-      console.log('[SSE] Dados:', parsed)
-      setData(parsed)
+      try {
+        const parsed = JSON.parse(e.data) as RobotSSEData
+        console.log('[SSE] Dados:', parsed)
+        setData(parsed)
+      } catch (err) {
+        console.warn('[SSE] JSON inválido:', e.data, err)
+      }
     }
 
     source.onerror = () => {
