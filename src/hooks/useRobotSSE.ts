@@ -10,6 +10,7 @@ export type RobotSSELogEntry = {
 
 export type RobotSSEData = {
   status_robo?: string
+  estado?: string
   timestamp?: string
   raw_bits?: boolean[]
 
@@ -18,6 +19,41 @@ export type RobotSSEData = {
   total_ciclos?: number
   taxa_acerto?: string
   ultimo_log?: string
+}
+
+function estadoFromBits(bits?: boolean[]): string {
+  const b = Array.isArray(bits) ? bits : []
+  const home = !!b[0]
+  const sleep = !!b[1]
+  const emMovimento = !!b[2]
+  const rampa1 = !!b[3]
+  const rampa2 = !!b[4]
+  const rampa3 = !!b[5]
+
+  // Prioridade: movimentos específicos > movimento genérico > estados estáveis
+  if (rampa1) return 'movimento da rampa 1'
+  if (rampa2) return 'movimento da rampa 2'
+  if (rampa3) return 'movimento da rampa 3'
+  if (emMovimento) return 'em movimento'
+  if (home) return 'home'
+  if (sleep) return 'sleep'
+  return 'indefinido'
+}
+
+function normalizePayload(raw: unknown): RobotSSEData | null {
+  // Às vezes o Node-RED pode mandar só o array de bits
+  if (Array.isArray(raw)) {
+    if (raw.every((x) => typeof x === 'boolean')) {
+      return { raw_bits: raw as boolean[] }
+    }
+    return { raw_bits: raw.map(Boolean) as boolean[] }
+  }
+
+  if (raw && typeof raw === 'object') {
+    return raw as RobotSSEData
+  }
+
+  return null
 }
 
 function logTimeFromPayload(p: RobotSSEData): string {
@@ -40,6 +76,7 @@ function logTimeFromPayload(p: RobotSSEData): string {
 }
 
 function logMessageFromPayload(p: RobotSSEData): string {
+  if (p.estado) return p.estado
   if (p.status_robo) return p.status_robo
   return 'Atualização recebida'
 }
@@ -59,13 +96,21 @@ export function useRobotSSE() {
 
     source.onmessage = (e) => {
       try {
-        const parsed = JSON.parse(e.data) as RobotSSEData
-        console.log('[SSE] Dados:', parsed)
-        setData(parsed)
+        const decoded = JSON.parse(e.data) as unknown
+        const parsed = normalizePayload(decoded)
+        if (!parsed) return
+
+        const enriched: RobotSSEData = {
+          ...parsed,
+          estado: parsed.estado ?? parsed.status_robo ?? estadoFromBits(parsed.raw_bits),
+        }
+
+        console.log('[SSE] Dados:', enriched)
+        setData(enriched)
         setLogHistory((prev) => {
           const entry: RobotSSELogEntry = {
-            time: logTimeFromPayload(parsed),
-            message: logMessageFromPayload(parsed),
+            time: logTimeFromPayload(enriched),
+            message: logMessageFromPayload(enriched),
           }
           return [...prev, entry].slice(-MAX_LOG_HISTORY)
         })

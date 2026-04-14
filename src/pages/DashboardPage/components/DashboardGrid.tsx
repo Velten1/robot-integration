@@ -55,7 +55,7 @@ export function DashboardGrid({ robot, logs = [] }: Props) {
             lines={[
               {
                 label: 'Status',
-                value: robot?.status_robo != null && robot.status_robo !== '' ? String(robot.status_robo) : '',
+                value: robot?.estado != null && robot.estado !== '' ? String(robot.estado) : '',
               },
             ]}
           />
@@ -63,7 +63,7 @@ export function DashboardGrid({ robot, logs = [] }: Props) {
       </section>
 
       <section className="lg:col-span-8 xl:col-span-6">
-        <CellSchematicCard status={robot?.status_robo} rawBits={robot?.raw_bits} />
+        <CellSchematicCard status={robot?.estado ?? robot?.status_robo} rawBits={robot?.raw_bits} />
       </section>
 
       <aside className="lg:col-span-12 xl:col-span-3">

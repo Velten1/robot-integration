@@ -26,6 +26,7 @@ type Props = {
 export function CellSchematicCard({ status, rawBits }: Props): JSX.Element {
   const bits = rawBits ?? []
   const bit = (idx: number) => Boolean(bits[idx])
+  const transporteAtivo = bit(2) || bit(3) || bit(4) || bit(5)
 
   return (
     <Card>
@@ -61,7 +62,7 @@ export function CellSchematicCard({ status, rawBits }: Props): JSX.Element {
               Transporte
             </div>
             <div className="mt-1 text-base font-extrabold text-slate-800 dark:text-slate-100">
-              {bit(3) ? 'ATIVO' : 'INATIVO'}
+              {transporteAtivo ? 'ATIVO' : 'INATIVO'}
             </div>
           </div>
           <div className="text-center">
