@@ -39,7 +39,7 @@ export function DashboardPage() {
 
       {/* Conteúdo */}
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-5">
-        <DashboardGrid robot={robot.data} />
+        <DashboardGrid robot={robot.data} logs={robot.logHistory} />
       </main>
 
       {/* Footer */}

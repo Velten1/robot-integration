@@ -1,12 +1,18 @@
 import { KpiCard } from './KpiCard'
-import { CellSchematicCard } from './CellSchematicCard'
+import { CellSchematicCard as CellSchematicCardRaw } from './CellSchematicCard'
 import { RightPanel } from './RightPanel'
-import type { RobotLogItem } from './RightPanel'
-import type { RobotSSEData } from '../../../hooks/useRobotSSE'
+import type { RobotSSEData, RobotSSELogEntry } from '../../../hooks/useRobotSSE'
+import type { ComponentType } from 'react'
 
 type Props = {
   robot?: RobotSSEData | null
+  logs?: RobotSSELogEntry[]
 }
+
+const CellSchematicCard = CellSchematicCardRaw as unknown as ComponentType<{
+  status?: string
+  rawBits?: boolean[]
+}>
 
 function splitPercent(raw?: string) {
   if (!raw) return { value: '', unit: '' }
@@ -15,25 +21,8 @@ function splitPercent(raw?: string) {
   return { value: trimmed, unit: '' }
 }
 
-function formatLogTime(raw?: string) {
-  if (!raw) return '—'
-  const ms = Number(raw)
-  if (!Number.isFinite(ms)) return raw
-  const d = new Date(ms)
-  if (Number.isNaN(d.getTime())) return raw
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-}
-
-export function DashboardGrid({ robot }: Props) {
+export function DashboardGrid({ robot, logs = [] }: Props) {
   const taxa = splitPercent(robot?.taxa_acerto)
-  const logs: RobotLogItem[] = robot?.ultimo_log
-    ? [
-        {
-          time: formatLogTime(robot.ultimo_log),
-          message: robot?.status_robo ? `Status: ${robot.status_robo}` : 'Atualização recebida',
-        },
-      ]
-    : []
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -64,14 +53,17 @@ export function DashboardGrid({ robot }: Props) {
             value={taxa.value}
             unit={taxa.unit}
             lines={[
-              { label: 'Status', value: robot?.status_robo ? String(robot.status_robo) : '' },
+              {
+                label: 'Status',
+                value: robot?.status_robo != null && robot.status_robo !== '' ? String(robot.status_robo) : '',
+              },
             ]}
           />
         </div>
       </section>
 
       <section className="lg:col-span-8 xl:col-span-6">
-        <CellSchematicCard />
+        <CellSchematicCard status={robot?.status_robo} rawBits={robot?.raw_bits} />
       </section>
 
       <aside className="lg:col-span-12 xl:col-span-3">
